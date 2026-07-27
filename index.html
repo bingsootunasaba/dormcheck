@@ -36,7 +36,7 @@
             overflow: hidden;
         }
 
-        /* Sidebar Navigation Fix */
+        /* Sidebar Navigation */
         .sidebar {
             width: 220px;
             flex-shrink: 0;
@@ -99,7 +99,7 @@
             box-shadow: 0 4px 12px rgba(255, 138, 178, 0.35);
         }
 
-        /* Main Content Area Fix */
+        /* Main Content Area */
         .main-content {
             flex: 1;
             padding: 25px 30px;
@@ -132,7 +132,6 @@
             color: var(--text-color);
         }
 
-        /* Responsive Grid Fix */
         .grid-2 {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -155,6 +154,7 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         input[type="text"], input[type="number"], select {
@@ -178,7 +178,7 @@
             color: white;
             border: none;
             border-radius: 14px;
-            padding: 12px 18px;
+            padding: 10px 16px;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
@@ -191,7 +191,18 @@
             transform: scale(0.97);
         }
 
-        /* Big Checkbox & Todo Items */
+        .btn-tag-add {
+            background: #FFE4EC;
+            color: var(--primary-pink-hover);
+            border: 1px dashed var(--primary-pink);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* Todo Items & Checkbox */
         .item-list {
             list-style: none;
             display: flex;
@@ -207,20 +218,20 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
         }
 
         .item-card.checked {
             background: #FAF6F8;
-            opacity: 0.65;
+            opacity: 0.55;
+            border-color: #E8E0E3;
         }
 
         .item-card.checked .item-name {
             text-decoration: line-through;
-            color: #999;
+            color: #888;
         }
 
-        /* BIG KAWAII CHECKBOX */
         .checkbox-container {
             display: block;
             position: relative;
@@ -304,7 +315,7 @@
             border: 1px solid #DDD;
         }
 
-        /* Custom Budget Banner */
+        /* Summary Banner */
         .summary-banner {
             background: linear-gradient(135deg, #FFE4EC 0%, #E8DFF5 100%);
             border-radius: var(--border-radius);
@@ -454,15 +465,9 @@
             <div class="card">
                 <div class="input-row">
                     <input type="text" id="add-name" placeholder="ชื่อของ (เช่น ปลั๊กพ่วง)" style="flex:2; min-width: 150px;">
-                    <select id="add-tag" style="flex:1; min-width: 130px;">
-                        <option value="เครื่องใช้ไฟฟ้า">⚡ เครื่องใช้ไฟฟ้า</option>
-                        <option value="ห้องนอน/หมอน">หมอน/เครื่องนอน</option>
-                        <option value="ห้องน้ำ/ทำความสะอาด">🧼 ห้องน้ำ/ความสะอาด</option>
-                        <option value="เครื่องเขียน/เรียน">📚 เครื่องเขียน/เรียน</option>
-                        <option value="ของแต่งห้อง">🎀 ของแต่งห้อง</option>
-                        <option value="อื่นๆ">📦 อื่นๆ</option>
-                    </select>
-                    <input type="number" id="add-price" placeholder="ราคา (฿)" style="width: 110px;" inputmode="decimal" pattern="[0-9]*">
+                    <select id="add-tag" style="flex:1.2; min-width: 150px;"></select>
+                    <button class="btn-tag-add" onclick="createNewTag()">🏷️ + เพิ่มแท็กใหม่</button>
+                    <input type="number" id="add-price" placeholder="ราคา (฿)" style="width: 100px;" inputmode="decimal" pattern="[0-9]*">
                     <button class="btn-primary" onclick="addNewItem()">+ เพิ่มรายการ</button>
                 </div>
             </div>
@@ -553,26 +558,65 @@
     </div>
 
 <script>
-    // App State with LocalStorage
-    let items = JSON.parse(localStorage.getItem('dorm_items')) || [
-        { id: 1, name: 'ปลั๊กพ่วง 5 เมตร', tag: 'เครื่องใช้ไฟฟ้า', price: 350, completed: true },
-        { id: 2, name: 'ทิชชู่ม้วนแพ็คใหญ่', tag: 'ห้องน้ำ/ทำความสะอาด', price: 180, completed: false },
-        { id: 3, name: 'ชุดเครื่องนอน 6 ฟุต', tag: 'ห้องนอน/หมอน', price: 1200, completed: false }
+    // App State
+    let tags = JSON.parse(localStorage.getItem('dorm_tags')) || [
+        '💄 เครื่องสำอาง/สกินแคร์',
+        '⚡ เครื่องใช้ไฟฟ้า',
+        '🛏️ ห้องนอน/หมอน',
+        '🧼 ห้องน้ำ/ความสะอาด',
+        '📚 เครื่องเขียน/เรียน',
+        '🎀 ของแต่งห้อง',
+        '📦 อื่นๆ'
     ];
 
-    let savedBudget = localStorage.getItem('dorm_user_budget') || 5000;
+    // ข้อมูลเริ่มต้นดึงตรงจากภาพถ่ายหน้าจอของคุณ
+    let initialItemsFromImage = [
+        { id: 1, name: 'สำลี', tag: '📦 อื่นๆ', price: 0, completed: true },
+        { id: 2, name: 'คอนแทคเลนส์ทั้งหมด', tag: '📦 อื่นๆ', price: 0, completed: true },
+        { id: 3, name: 'เครื่องสำอางทั้งหมด', tag: '📦 อื่นๆ', price: 0, completed: false },
+        { id: 4, name: 'น้ำยาล้าง Contract', tag: '📦 อื่นๆ', price: 0, completed: true },
+        { id: 5, name: 'สก๊อตไบรต์', tag: '🧼 ห้องน้ำ/ความสะอาด', price: 0, completed: true }
+    ];
 
+    let items = JSON.parse(localStorage.getItem('dorm_items')) || initialItemsFromImage;
+    let savedBudget = localStorage.getItem('dorm_user_budget') || 5000;
     let chartInstance = null;
     let bestOptionWinner = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('user-budget').value = savedBudget;
+        renderTagOptions();
         renderTodoList();
     });
 
     function saveData() {
         localStorage.setItem('dorm_items', JSON.stringify(items));
+        localStorage.setItem('dorm_tags', JSON.stringify(tags));
         localStorage.setItem('dorm_user_budget', document.getElementById('user-budget').value);
+    }
+
+    function renderTagOptions() {
+        const select = document.getElementById('add-tag');
+        select.innerHTML = '';
+        tags.forEach(tag => {
+            const opt = document.createElement('option');
+            opt.value = tag;
+            opt.textContent = tag;
+            select.appendChild(opt);
+        });
+    }
+
+    function createNewTag() {
+        const newTag = prompt('พิมพ์ชื่อแท็กใหม่ที่ต้องการเพิ่มค่ะ:');
+        if (newTag && newTag.trim() !== '') {
+            const formattedTag = `🏷️ ${newTag.trim()}`;
+            if (!tags.includes(formattedTag)) {
+                tags.push(formattedTag);
+                renderTagOptions();
+                document.getElementById('add-tag').value = formattedTag;
+                saveData();
+            }
+        }
     }
 
     // Navigation Switch
@@ -588,12 +632,14 @@
         }
     }
 
-    // TO-DO LIST FUNCTIONS
+    // TO-DO LIST FUNCTIONS (เรียงลำดับ: ยังไม่ได้ติ๊กอยู่บน, ติ๊กแล้วตกไปล่างสุด)
     function renderTodoList() {
         const list = document.getElementById('main-item-list');
         list.innerHTML = '';
 
-        items.forEach(item => {
+        const sortedItems = [...items].sort((a, b) => a.completed - b.completed);
+
+        sortedItems.forEach(item => {
             const li = document.createElement('li');
             li.className = `item-card ${item.completed ? 'checked' : ''}`;
             li.innerHTML = `
@@ -624,7 +670,7 @@
         const tag = document.getElementById('add-tag').value;
         const price = parseFloat(document.getElementById('add-price').value) || 0;
 
-        if (!name) return alert('ใส่ชื่อของก่อนน้าคนสวย ✨');
+        if (!name) return alert('ใส่ชื่อของก่อนน้า ✨');
 
         items.unshift({
             id: Date.now(),
@@ -667,15 +713,15 @@
         const remainingElem = document.getElementById('sum-remaining');
         remainingElem.textContent = `฿${remaining.toLocaleString()}`;
         if (remaining < 0) {
-            remainingElem.style.color = '#FF4D6D'; // แดงเตือนว่างบเกิน
+            remainingElem.style.color = '#FF4D6D';
         } else {
-            remainingElem.style.color = '#2ECC71'; // เขียวว่างบยังเหลือ
+            remainingElem.style.color = '#2ECC71';
         }
 
         saveData();
     }
 
-    // ANALYZE DASHBOARD (CHART)
+    // ANALYZE DASHBOARD
     function renderChart() {
         const tagTotals = {};
         items.forEach(i => {
@@ -690,7 +736,7 @@
         labels.forEach(tag => {
             const div = document.createElement('div');
             div.style.cssText = "display:flex; justify-content:space-between; padding:8px 12px; background:#FFF9FA; border-radius:10px; font-size:14px;";
-            div.innerHTML = `<span>🏷️ ${tag}</span> <strong>฿${tagTotals[tag].toLocaleString()}</strong>`;
+            div.innerHTML = `<span>${tag}</span> <strong>฿${tagTotals[tag].toLocaleString()}</strong>`;
             tagSummaryList.appendChild(div);
         });
 
@@ -703,7 +749,7 @@
                 labels: labels,
                 datasets: [{
                     data: data,
-                    backgroundColor: ['#FF8AB2', '#B590CA', '#FFC3A0', '#FF9AA2', '#E2F0CB', '#B5EAD7']
+                    backgroundColor: ['#FF8AB2', '#B590CA', '#FFC3A0', '#FF9AA2', '#E2F0CB', '#B5EAD7', '#D4A5A5']
                 }]
             },
             options: {
@@ -763,12 +809,12 @@
         items.unshift({
             id: Date.now(),
             name: bestOptionWinner.name,
-            tag: 'อื่นๆ',
+            tag: '📦 อื่นๆ',
             price: bestOptionWinner.price,
             completed: false
         });
         alert(`เพิ่ม "${bestOptionWinner.name}" เข้าลิสต์จัดของเรียบร้อยแล้วค่ะ! ✨`);
-        saveData();
+        renderTodoList();
     }
 
     function escapeHtml(text) {
