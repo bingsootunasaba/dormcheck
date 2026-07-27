@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dorm Move-in Master & Budget Tracker 🎀</title>
+    <!-- Google Fonts & Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #FFF2F5;
+            --sidebar-bg: #FFFFFF;
+            --primary-pink: #FF8AB2;
+            --primary-pink-hover: #FF6B9D;
+            --soft-purple: #C39EA0;
+            --accent-purple: #B590CA;
+            --light-pink: #FFE4EC;
+            --text-color: #4A3E3D;
+            --card-bg: #FFFFFF;
+            --border-radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Mitr', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation Fix */
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            background: var(--sidebar-bg);
+            padding: 25px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border-right: 3px solid #FFE0EA;
+            box-shadow: 5px 0 20px rgba(255, 138, 178, 0.08);
+            z-index: 10;
+        }
+
+        .brand {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #FFD0E0;
+        }
+
+        .brand h2 {
+            color: var(--primary-pink);
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .brand p {
+            font-size: 11px;
+            color: #AAA;
+            margin-top: 4px;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            list-style: none;
+        }
+
+        .nav-btn {
+            background: #FFF9FA;
+            border: 2px solid #FFE0EA;
+            border-radius: 16px;
+            padding: 12px 14px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--primary-pink);
+            color: white;
+            border-color: var(--primary-pink);
+            box-shadow: 0 4px 12px rgba(255, 138, 178, 0.35);
+        }
+
+        /* Main Content Area Fix */
+        .main-content {
+            flex: 1;
+            padding: 25px 30px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-width: 0;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            margin-bottom: 20px;
+        }
+
+        .section-header h1 {
+            font-size: 24px;
+            color: var(--text-color);
+        }
+
+        /* Responsive Grid Fix */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            border: 2px solid #FFE0EA;
+            box-shadow: 0 8px 24px rgba(255, 138, 178, 0.08);
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        /* Form Inputs */
+        .input-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], input[type="number"], select {
+            border: 2px solid #FFD0E0;
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-size: 15px;
+            outline: none;
+            background: #FFF;
+            transition: all 0.2s;
+            min-width: 0;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-pink);
+            box-shadow: 0 0 8px rgba(255, 138, 178, 0.3);
+        }
+
+        .btn-primary {
+            background: var(--primary-pink);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 12px 18px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 138, 178, 0.3);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        /* Big Checkbox & Todo Items */
+        .item-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item-card {
+            background: #FFF;
+            border: 2px solid #F0E6EA;
+            border-radius: 18px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .item-card.checked {
+            background: #FAF6F8;
+            opacity: 0.65;
+        }
+
+        .item-card.checked .item-name {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        /* BIG KAWAII CHECKBOX */
+        .checkbox-container {
+            display: block;
+            position: relative;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0; width: 0;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 0; left: 0;
+            height: 40px; width: 40px;
+            background-color: #FFF;
+            border: 3px solid var(--primary-pink);
+            border-radius: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: var(--primary-pink);
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .checkbox-container input:checked ~ .checkmark:after {
+            display: block;
+            left: 13px; top: 6px;
+            width: 9px; height: 18px;
+            border: solid white;
+            border-width: 0 4px 4px 0;
+            transform: rotate(45deg);
+        }
+
+        .item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .item-header-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .tag-badge {
+            background: var(--light-pink);
+            color: var(--primary-pink-hover);
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .price-input-sm {
+            width: 100px;
+            padding: 4px 8px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #DDD;
+        }
+
+        /* Custom Budget Banner */
+        .summary-banner {
+            background: linear-gradient(135deg, #FFE4EC 0%, #E8DFF5 100%);
+            border-radius: var(--border-radius);
+            padding: 18px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-box {
+            text-align: center;
+            background: rgba(255,255,255,0.5);
+            padding: 10px;
+            border-radius: 14px;
+        }
+
+        .summary-box h3 {
+            font-size: 12px;
+            color: #665264;
+            margin-bottom: 4px;
+        }
+
+        .summary-box p {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            color: var(--primary-pink-hover);
+        }
+
+        .budget-input-field {
+            width: 110px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--primary-pink-hover);
+            border: 2px dashed var(--primary-pink);
+            background: #FFF;
+        }
+
+        /* Calculator Options */
+        .calc-option {
+            background: #FFF9FA;
+            border: 2px dashed #FFD0E0;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .calc-option h3 {
+            color: var(--primary-pink);
+            font-size: 15px;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 16px;
+            background: #E8F8F5;
+            border: 2px solid #A3E4D7;
+            text-align: center;
+            display: none;
+        }
+
+        .result-box.active {
+            display: block;
+        }
+
+        .result-winner {
+            font-size: 18px;
+            font-weight: 600;
+            color: #117A65;
+            margin-bottom: 4px;
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.6;
+            padding: 4px;
+        }
+        .btn-delete:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="brand">
+            <h2>🎀 Dorm Master</h2>
+            <p>iPad Landscape Edition</p>
+        </div>
+
+        <ul class="nav-menu">
+            <li>
+                <button class="nav-btn active" onclick="switchTab('todo')">
+                    <span>📝</span> ลิสต์ของเข้าห้อง
+                </button>
+            </li>
+            <li>
+                <button class="nav-btn" onclick="switchTab('analyze')">
+                    <span>📊</span> วิเคราะห์รายจ่าย
+                </button>
+            </li>
+            <li>
+                <button class="nav-btn" onclick="switchTab('calculator')">
+                    <span>⚖️</span> คำนวณความคุ้มค่า
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main View Content -->
+    <div class="main-content">
+
+        <!-- TAB 1: TO-DO LIST & TRACKER -->
+        <div id="todo-view" class="view-section active">
+            <div class="section-header">
+                <h1>รายการของที่ต้องจัด/ซื้อ 🛍️</h1>
+            </div>
+
+            <!-- Summary Top Banner -->
+            <div class="summary-banner">
+                <div class="summary-box">
+                    <h3>งบที่ตั้งไว้ (บาท) 🎯</h3>
+                    <input type="number" id="user-budget" class="budget-input-field" value="5000" inputmode="decimal" pattern="[0-9]*" onchange="updateSummary()" placeholder="ตั้งงบ">
+                </div>
+                <div class="summary-box">
+                    <h3>ซื้อแล้ว (ใช้ไป) 💸</h3>
+                    <p id="sum-spent">฿0</p>
+                </div>
+                <div class="summary-box">
+                    <h3>งบประมาณคงเหลือ 💰</h3>
+                    <p id="sum-remaining">฿0</p>
+                </div>
+                <div class="summary-box">
+                    <h3>ยอดรวมราคาทั้งหมด 📝</h3>
+                    <p id="sum-total" style="color:var(--text-color);">฿0</p>
+                </div>
+            </div>
+
+            <!-- Input Box -->
+            <div class="card">
+                <div class="input-row">
+                    <input type="text" id="add-name" placeholder="ชื่อของ (เช่น ปลั๊กพ่วง)" style="flex:2; min-width: 150px;">
+                    <select id="add-tag" style="flex:1; min-width: 130px;">
+                        <option value="เครื่องใช้ไฟฟ้า">⚡ เครื่องใช้ไฟฟ้า</option>
+                        <option value="ห้องนอน/หมอน">หมอน/เครื่องนอน</option>
+                        <option value="ห้องน้ำ/ทำความสะอาด">🧼 ห้องน้ำ/ความสะอาด</option>
+                        <option value="เครื่องเขียน/เรียน">📚 เครื่องเขียน/เรียน</option>
+                        <option value="ของแต่งห้อง">🎀 ของแต่งห้อง</option>
+                        <option value="อื่นๆ">📦 อื่นๆ</option>
+                    </select>
+                    <input type="number" id="add-price" placeholder="ราคา (฿)" style="width: 110px;" inputmode="decimal" pattern="[0-9]*">
+                    <button class="btn-primary" onclick="addNewItem()">+ เพิ่มรายการ</button>
+                </div>
+            </div>
+
+            <!-- List Area -->
+            <ul class="item-list" id="main-item-list"></ul>
+        </div>
+
+        <!-- TAB 2: ANALYZE DASHBOARD -->
+        <div id="analyze-view" class="view-section">
+            <div class="section-header">
+                <h1>วิเคราะห์รายจ่ายรายหมวดหมู่ 📊</h1>
+            </div>
+
+            <div class="grid-2">
+                <div class="card" style="display:flex; justify-content:center; align-items:center; height:320px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom:15px; color:var(--primary-pink);">สรุปยอดตามแท็ก 🏷️</h3>
+                    <div id="tag-summary-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: VALUE CALCULATOR -->
+        <div id="calculator-view" class="view-section">
+            <div class="section-header">
+                <h1>คำนวณความคุ้มค่า (Price / Unit) ⚖️</h1>
+            </div>
+
+            <div class="card">
+                <p style="margin-bottom: 15px; color:#666; font-size:14px;">เทียบราคาสินค้า 2 ขนาด/แบบ เพื่อดูว่าตัวเลือกไหนราคาต่อหน่วยถูกกว่ากัน!</p>
+                
+                <div class="grid-2">
+                    <!-- Option A -->
+                    <div class="calc-option">
+                        <h3>ตัวเลือก A 🅰️</h3>
+                        <input type="text" id="optA-name" placeholder="ชื่อสินค้า (เช่น ขวดเล็ก)" value="แบบ A">
+                        <div class="input-row">
+                            <input type="number" id="optA-price" placeholder="ราคา (บาท)" style="flex:1;" inputmode="decimal" pattern="[0-9]*">
+                            <input type="number" id="optA-size" placeholder="ขนาด/ปริมาณ" style="flex:1;" inputmode="decimal" pattern="[0-9]*">
+                            <select id="optA-unit">
+                                <option value="ชิ้น">ชิ้น</option>
+                                <option value="ml">ml</option>
+                                <option value="L">ลิตร (L)</option>
+                                <option value="g">กรัม (g)</option>
+                                <option value="kg">กิโลกรัม (kg)</option>
+                                <option value="oz">ออนซ์ (oz)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Option B -->
+                    <div class="calc-option">
+                        <h3>ตัวเลือก B 🅱️</h3>
+                        <input type="text" id="optB-name" placeholder="ชื่อสินค้า (เช่น ขวดใหญ่)" value="แบบ B">
+                        <div class="input-row">
+                            <input type="number" id="optB-price" placeholder="ราคา (บาท)" style="flex:1;" inputmode="decimal" pattern="[0-9]*">
+                            <input type="number" id="optB-size" placeholder="ขนาด/ปริมาณ" style="flex:1;" inputmode="decimal" pattern="[0-9]*">
+                            <select id="optB-unit">
+                                <option value="ชิ้น">ชิ้น</option>
+                                <option value="ml">ml</option>
+                                <option value="L">ลิตร (L)</option>
+                                <option value="g">กรัม (g)</option>
+                                <option value="kg">กิโลกรัม (kg)</option>
+                                <option value="oz">ออนซ์ (oz)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="calculateValue()">
+                    ✨ เริ่มคำนวณเปรียบเทียบ
+                </button>
+
+                <!-- Result Box -->
+                <div class="result-box" id="calc-result">
+                    <div class="result-winner" id="winner-text"></div>
+                    <p id="winner-detail" style="color:#444; font-size:14px;"></p>
+                    <button class="btn-primary" style="margin-top:12px; background:var(--accent-purple);" onclick="addWinnerToList()">
+                        ➕ เอาตัวเลือกที่คุ้มกว่าใส่ To-Do List
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+<script>
+    // App State with LocalStorage
+    let items = JSON.parse(localStorage.getItem('dorm_items')) || [
+        { id: 1, name: 'ปลั๊กพ่วง 5 เมตร', tag: 'เครื่องใช้ไฟฟ้า', price: 350, completed: true },
+        { id: 2, name: 'ทิชชู่ม้วนแพ็คใหญ่', tag: 'ห้องน้ำ/ทำความสะอาด', price: 180, completed: false },
+        { id: 3, name: 'ชุดเครื่องนอน 6 ฟุต', tag: 'ห้องนอน/หมอน', price: 1200, completed: false }
+    ];
+
+    let savedBudget = localStorage.getItem('dorm_user_budget') || 5000;
+
+    let chartInstance = null;
+    let bestOptionWinner = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('user-budget').value = savedBudget;
+        renderTodoList();
+    });
+
+    function saveData() {
+        localStorage.setItem('dorm_items', JSON.stringify(items));
+        localStorage.setItem('dorm_user_budget', document.getElementById('user-budget').value);
+    }
+
+    // Navigation Switch
+    function switchTab(tabName) {
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+
+        event.currentTarget.classList.add('active');
+        document.getElementById(`${tabName}-view`).classList.add('active');
+
+        if (tabName === 'analyze') {
+            renderChart();
+        }
+    }
+
+    // TO-DO LIST FUNCTIONS
+    function renderTodoList() {
+        const list = document.getElementById('main-item-list');
+        list.innerHTML = '';
+
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.className = `item-card ${item.completed ? 'checked' : ''}`;
+            li.innerHTML = `
+                <label class="checkbox-container">
+                    <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleItem(${item.id})">
+                    <span class="checkmark"></span>
+                </label>
+                <div class="item-info">
+                    <div class="item-header-row">
+                        <span class="item-name">${escapeHtml(item.name)}</span>
+                        <span class="tag-badge">${item.tag}</span>
+                    </div>
+                    <div>
+                        <input type="number" class="price-input-sm" value="${item.price || ''}" placeholder="ใส่ราคา" inputmode="decimal" pattern="[0-9]*" onchange="updatePrice(${item.id}, this.value)"> บาท
+                    </div>
+                </div>
+                <button class="btn-delete" onclick="deleteItem(${item.id})">🗑️</button>
+            `;
+            list.appendChild(li);
+        });
+
+        updateSummary();
+        saveData();
+    }
+
+    function addNewItem() {
+        const name = document.getElementById('add-name').value.trim();
+        const tag = document.getElementById('add-tag').value;
+        const price = parseFloat(document.getElementById('add-price').value) || 0;
+
+        if (!name) return alert('ใส่ชื่อของก่อนน้าคนสวย ✨');
+
+        items.unshift({
+            id: Date.now(),
+            name: name,
+            tag: tag,
+            price: price,
+            completed: false
+        });
+
+        document.getElementById('add-name').value = '';
+        document.getElementById('add-price').value = '';
+        renderTodoList();
+    }
+
+    function toggleItem(id) {
+        items = items.map(i => i.id === id ? { ...i, completed: !i.completed } : i);
+        renderTodoList();
+    }
+
+    function updatePrice(id, val) {
+        items = items.map(i => i.id === id ? { ...i, price: parseFloat(val) || 0 } : i);
+        updateSummary();
+        saveData();
+    }
+
+    function deleteItem(id) {
+        items = items.filter(i => i.id !== id);
+        renderTodoList();
+    }
+
+    function updateSummary() {
+        const userBudget = parseFloat(document.getElementById('user-budget').value) || 0;
+        const total = items.reduce((s, i) => s + (i.price || 0), 0);
+        const spent = items.filter(i => i.completed).reduce((s, i) => s + (i.price || 0), 0);
+        const remaining = userBudget - spent;
+
+        document.getElementById('sum-total').textContent = `฿${total.toLocaleString()}`;
+        document.getElementById('sum-spent').textContent = `฿${spent.toLocaleString()}`;
+        
+        const remainingElem = document.getElementById('sum-remaining');
+        remainingElem.textContent = `฿${remaining.toLocaleString()}`;
+        if (remaining < 0) {
+            remainingElem.style.color = '#FF4D6D'; // แดงเตือนว่างบเกิน
+        } else {
+            remainingElem.style.color = '#2ECC71'; // เขียวว่างบยังเหลือ
+        }
+
+        saveData();
+    }
+
+    // ANALYZE DASHBOARD (CHART)
+    function renderChart() {
+        const tagTotals = {};
+        items.forEach(i => {
+            tagTotals[i.tag] = (tagTotals[i.tag] || 0) + (i.price || 0);
+        });
+
+        const labels = Object.keys(tagTotals);
+        const data = Object.values(tagTotals);
+
+        const tagSummaryList = document.getElementById('tag-summary-list');
+        tagSummaryList.innerHTML = '';
+        labels.forEach(tag => {
+            const div = document.createElement('div');
+            div.style.cssText = "display:flex; justify-content:space-between; padding:8px 12px; background:#FFF9FA; border-radius:10px; font-size:14px;";
+            div.innerHTML = `<span>🏷️ ${tag}</span> <strong>฿${tagTotals[tag].toLocaleString()}</strong>`;
+            tagSummaryList.appendChild(div);
+        });
+
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['#FF8AB2', '#B590CA', '#FFC3A0', '#FF9AA2', '#E2F0CB', '#B5EAD7']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // VALUE CALCULATOR
+    function calculateValue() {
+        const nameA = document.getElementById('optA-name').value || 'แบบ A';
+        const priceA = parseFloat(document.getElementById('optA-price').value);
+        const sizeA = parseFloat(document.getElementById('optA-size').value);
+        const unitA = document.getElementById('optA-unit').value;
+
+        const nameB = document.getElementById('optB-name').value || 'แบบ B';
+        const priceB = parseFloat(document.getElementById('optB-price').value);
+        const sizeB = parseFloat(document.getElementById('optB-size').value);
+        const unitB = document.getElementById('optB-unit').value;
+
+        if (!priceA || !sizeA || !priceB || !sizeB) {
+            return alert('กรอกราคาและขนาดของทั้ง 2 ตัวเลือกให้ครบถ้วนก่อนน้า');
+        }
+
+        const unitCostA = priceA / sizeA;
+        const unitCostB = priceB / sizeB;
+
+        const resultBox = document.getElementById('calc-result');
+        const winnerText = document.getElementById('winner-text');
+        const winnerDetail = document.getElementById('winner-detail');
+
+        resultBox.classList.add('active');
+
+        if (unitCostA < unitCostB) {
+            const diffPct = (((unitCostB - unitCostA) / unitCostB) * 100).toFixed(1);
+            winnerText.textContent = `🎉 ${nameA} คุ้มค่ากว่า!`;
+            winnerDetail.textContent = `ตกเฉลี่ย ${unitCostA.toFixed(2)} บาท/${unitA} (ประหยัดกว่าอีกตัวเลือกถึง ${diffPct}%)`;
+            bestOptionWinner = { name: nameA, price: priceA };
+        } else if (unitCostB < unitCostA) {
+            const diffPct = (((unitCostA - unitCostB) / unitCostA) * 100).toFixed(1);
+            winnerText.textContent = `🎉 ${nameB} คุ้มค่ากว่า!`;
+            winnerDetail.textContent = `ตกเฉลี่ย ${unitCostB.toFixed(2)} บาท/${unitB} (ประหยัดกว่าอีกตัวเลือกถึง ${diffPct}%)`;
+            bestOptionWinner = { name: nameB, price: priceB };
+        } else {
+            winnerText.textContent = `⚖️ ทั้งสองแบบราคาคุ้มค่าเท่ากันเลย!`;
+            winnerDetail.textContent = `ตกเฉลี่ย ${unitCostA.toFixed(2)} บาท/หน่วย เท่ากันเป๊ะ`;
+            bestOptionWinner = { name: nameA, price: priceA };
+        }
+    }
+
+    function addWinnerToList() {
+        if (!bestOptionWinner) return;
+        items.unshift({
+            id: Date.now(),
+            name: bestOptionWinner.name,
+            tag: 'อื่นๆ',
+            price: bestOptionWinner.price,
+            completed: false
+        });
+        alert(`เพิ่ม "${bestOptionWinner.name}" เข้าลิสต์จัดของเรียบร้อยแล้วค่ะ! ✨`);
+        saveData();
+    }
+
+    function escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+</script>
+</body>
+</html>
